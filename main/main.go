@@ -7,6 +7,10 @@ import (
 	"encoding/json"
 	"strings"
 	"regexp"
+	"os"
+	"log"
+	"io"
+	"io/ioutil"
 )
 
 type Api struct {
@@ -24,10 +28,15 @@ func (api Api) NewMux() Api {
 func (api Api) ListenAndServe() Api {
 
 	http.HandleFunc(api.BaseUrl, func(ww http.ResponseWriter, rr *http.Request) {
-		fmt.Println(rr.URL.Path)
 		respBody := MountResponseJSON(ww, rr, api)
-		ww.Header().Set("Content-Type", "application/json; charset=utf-8")
-		ww.Write(respBody)
+		//ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+		fmt.Println(respBody, reflect.TypeOf(respBody))
+		if reflect.TypeOf(respBody).String() != "[]uint8" {
+			respBody, _ = json.MarshalIndent(respBody, "", "  ")
+			ww.Write(respBody.([]byte))
+		} else {
+			ww.Write(respBody.([]uint8))
+		}
 	})
 
 	http.ListenAndServe(api.Addr, nil)
@@ -37,7 +46,7 @@ func (api Api) ListenAndServe() Api {
 /**
 	Monta JSON de resposta
  */
-func MountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) []byte {
+func MountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) interface{} {
 	request := &Request{}
 	request.Request = rr
 
@@ -56,10 +65,10 @@ func MountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) []byte
 /**
 	Função que monta um json de acordo com a lista de valores. Utilizada na função MountResponseJSON
  */
-func MountRespBodyAccordingValues(values []reflect.Value) []byte {
-	var respBody []byte
+func MountRespBodyAccordingValues(values []reflect.Value) interface{} {
+	var respBody interface{}
 	if values != nil && len(values) > 0 {
-		respBody, _ = json.MarshalIndent(values[0].Interface(), "", "  ")
+		respBody = values[0].Interface()
 	} else {
 		respBody, _ = json.MarshalIndent(values, "", "  ")
 	}
@@ -156,22 +165,55 @@ type Request struct {
 	PathVariables map[string]interface{}
 }
 
-
 type Response struct {
 	http.ResponseWriter
 }
-
-
-
 
 type Pessoa struct {
 	Nome string `json:"nome"`
 }
 
-func Testando(w Response, r *Request) string {
-	fmt.Println(r.PathVariables)
-	return "{\"zxczxc\":\"\asd\"}"
-	//return Pessoa{Nome: "will"}
+type Endereco struct {
+	RuaLegal string `json:"ruaLegal"`
+}
+
+func Testando(w Response, r *Request) Pessoa {
+	//return "{\"zxczxc\":\"\asd\"}"
+	a := r.PathVariables["bbb"]
+	return Pessoa{Nome: a.(string)}
+}
+
+func Testando1(w Response, r *Request) string {
+	//return "{\"zxczxc\":\"\asd\"}"
+	return "Douglas"
+}
+
+
+func Testando2(w Response, r *Request) Endereco {
+	//return "{\"zxczxc\":\"\asd\"}"
+	return Endereco{RuaLegal : "will"}
+}
+
+func Testando3(w Response, r *Request) []byte {
+	img, err := os.Open("./teste.png")
+	if err != nil {
+		log.Fatal(err) // perhaps handle this nicer
+	}
+	defer img.Close()
+	w.Header().Set("Content-Type", "image/jpeg") // <-- set the content-type header
+	a, _ := ioutil.ReadAll(img)
+	return a
+
+}
+func Testando4(w Response, r *Request) string {
+	img, err := os.Open("./teste.png")
+	if err != nil {
+		log.Fatal(err) // perhaps handle this nicer
+	}
+	defer img.Close()
+	w.Header().Set("Content-Type", "image/jpeg") // <-- set the content-type header
+	io.Copy(w, img)
+	return ""
 }
 
 func NotFound(w http.ResponseWriter, r *Request) string {
@@ -179,9 +221,53 @@ func NotFound(w http.ResponseWriter, r *Request) string {
 }
 
 func main() {
-	api := Api{Addr: ":8080", BaseUrl: "/"}.NewMux()
+	api := Api{Addr: ":8086", BaseUrl: "/"}.NewMux()
 	api.OnNotFound(NotFound)
-	api.Register(Resource{Path: "/asd/{bbb}/\\d", Method: "GET", Function: Testando})
+	api.Register(Resource{Path: "/asd/{bbb}", Method: "GET", Function: Testando2})
 	api.ListenAndServe()
 	//http.HandleFunc("/teste", Testando)
 }
+
+
+
+
+//func Home(w http.ResponseWriter, r *http.Request) {
+//	imgFile, err := os.Open("./teste.png") // a QR code image
+//
+//	if err != nil {
+//		fmt.Println(err)
+//		os.Exit(1)
+//	}
+//
+//	defer imgFile.Close()
+//
+//	// create a new buffer base on file size
+//	fInfo, _ := imgFile.Stat()
+//	var size int64 = fInfo.Size()
+//	buf := make([]byte, size)
+//
+//	// read file content into buffer
+//	fReader := bufio.NewReader(imgFile)
+//	fReader.Read(buf)
+//
+//	// if you create a new image instead of loading from file, encode the image to buffer instead with png.Encode()
+//
+//	// png.Encode(&buf, image)
+//
+//	// convert the buffer bytes to base64 string - use buf.Bytes() for new image
+//	imgBase64Str := base64.StdEncoding.EncodeToString(buf)
+//
+//	// Embed into an html without PNG file
+//	img2html := "<html><body><img src=\"data:image/png;base64," + imgBase64Str + "\" /></body></html>"
+//
+//	w.Write([]byte(fmt.Sprintf(img2html)))
+//
+//}
+//
+//func main() {
+//	// http.Handler
+//	mux := http.NewServeMux()
+//	mux.HandleFunc("/", Home)
+//
+//	http.ListenAndServe(":8086", mux)
+//}
