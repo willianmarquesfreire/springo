@@ -2,14 +2,12 @@ package main
 
 import (
 	"net/http"
-	"fmt"
 	"reflect"
 	"encoding/json"
 	"strings"
 	"regexp"
 	"os"
 	"log"
-	"io"
 	"io/ioutil"
 )
 
@@ -30,7 +28,6 @@ func (api Api) ListenAndServe() Api {
 	http.HandleFunc(api.BaseUrl, func(ww http.ResponseWriter, rr *http.Request) {
 		respBody := MountResponseJSON(ww, rr, api)
 		//ww.Header().Set("Content-Type", "application/json; charset=utf-8")
-		fmt.Println(respBody, reflect.TypeOf(respBody))
 		if reflect.TypeOf(respBody).String() != "[]uint8" {
 			respBody, _ = json.MarshalIndent(respBody, "", "  ")
 			ww.Write(respBody.([]byte))
@@ -205,15 +202,15 @@ func Testando3(w Response, r *Request) []byte {
 	return a
 
 }
-func Testando4(w Response, r *Request) string {
-	img, err := os.Open("./teste.png")
+func Testando4(w Response, r *Request) []byte {
+	file, err := os.Open("./teste.zip")
 	if err != nil {
 		log.Fatal(err) // perhaps handle this nicer
 	}
-	defer img.Close()
-	w.Header().Set("Content-Type", "image/jpeg") // <-- set the content-type header
-	io.Copy(w, img)
-	return ""
+	defer file.Close()
+	w.Header().Set("Content-Type", "multipart/form-data;") // <-- set the content-type header
+	a, _ := ioutil.ReadAll(file)
+	return a
 }
 
 func NotFound(w http.ResponseWriter, r *Request) string {
@@ -223,7 +220,7 @@ func NotFound(w http.ResponseWriter, r *Request) string {
 func main() {
 	api := Api{Addr: ":8086", BaseUrl: "/"}.NewMux()
 	api.OnNotFound(NotFound)
-	api.Register(Resource{Path: "/asd/{bbb}", Method: "GET", Function: Testando2})
+	api.Register(Resource{Path: "/asd/{bbb}", Method: "GET", Function: Testando4})
 	api.ListenAndServe()
 	//http.HandleFunc("/teste", Testando)
 }
