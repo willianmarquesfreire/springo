@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"encoding/json"
 	"strings"
+	"springo/logger"
 )
 
 /**
@@ -31,6 +32,7 @@ func (api Api) NewMux() Api {
  */
 func (api Api) ListenAndServe() Api {
 
+	logger.MessageApiStartedLog(api.BaseUrl, api.Addr)
 	http.HandleFunc(api.BaseUrl, func(ww http.ResponseWriter, rr *http.Request) {
 		respBody := MountResponseJSON(ww, rr, api)
 		//ww.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -42,7 +44,10 @@ func (api Api) ListenAndServe() Api {
 		}
 	})
 
-	http.ListenAndServe(api.Addr, nil)
+	error := http.ListenAndServe(api.Addr, nil)
+	if error != nil {
+		logger.ExceptionApiNotStartedLog(error.Error())
+	}
 	return api
 }
 
@@ -153,6 +158,8 @@ func (api *Api) Register(r Resource) *Api {
 	r.Info.Regex, _ = regexp.Compile("^" + regexp.MustCompile("{\\w+}").ReplaceAllString(r.Path, "(\\w+)") + "$")
 	pos := strings.Split(r.Path, "/")[0]
 	api.resources[pos] = append(api.resources[pos], r)
+
+	logger.MessageResourceStartedLog(r.Path)
 
 	return api
 }
