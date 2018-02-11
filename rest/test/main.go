@@ -7,20 +7,18 @@ import (
 	"net/http"
 	"springo/rest"
 	"springo/config"
-	"fmt"
 )
 
 func main() {
-	fmt.Println("ola")
 	config.StartConfigurationTestMock()
-	api := rest.Api{Addr: ":8086", BaseUrl: "/"}.NewMux()
+	api := rest.Api{Addr: ":8086", BaseUrl: "/api/"}.NewMux()
 	api.OnNotFound(NotFound)
-	api.Register(rest.Resource{Path: "/testando/{nome}", Method: "GET", Function: Testando})
-	api.Register(rest.Resource{Path: "/testando1/\\d", Method: "GET", Function: Testando1})
-	api.Register(rest.Resource{Path: "/testando2", Method: "GET", Function: Testando2})
-	api.Register(rest.Resource{Path: "/testando3", Method: "GET", Function: Testando3})
-	api.Register(rest.Resource{Path: "/testando4", Method: "GET", Function: Testando4})
-	api.Register(rest.Resource{Path: "/testando5", Method: "GET", Function: Testando5})
+	api.Register(rest.Resource{Path: "testando/{nome}", Method: "GET", Function: Testando})
+	api.Register(rest.Resource{Path: "testando1/\\d", Method: "GET", Function: Testando1})
+	api.Register(rest.Resource{Path: "testando2", Method: "GET", Function: Testando2})
+	api.Register(rest.Resource{Path: "testando3", Method: "GET", Function: Testando3})
+	api.Register(rest.Resource{Path: "testando4", Method: "GET", Function: Testando4})
+	api.Register(rest.Resource{Path: "testando5", Method: "GET", Function: Testando5})
 	api.ListenAndServe()
 }
 

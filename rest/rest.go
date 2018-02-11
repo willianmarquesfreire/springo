@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"strings"
 	"springo/logger"
+	"springo/config"
 )
 
 /**
@@ -32,8 +33,13 @@ func (api Api) NewMux() Api {
  */
 func (api Api) ListenAndServe() Api {
 
-	logger.MessageApiStartedLog(api.BaseUrl, api.Addr)
-	http.HandleFunc(api.BaseUrl, func(ww http.ResponseWriter, rr *http.Request) {
+	baseUrl := api.BaseUrl
+	if baseUrl == "" {
+		baseUrl = "/"
+	}
+
+	logger.MessageApiStartedLog(config.MainConfiguration.ApiPath+baseUrl, api.Addr)
+	http.HandleFunc(config.MainConfiguration.ApiPath+baseUrl, func(ww http.ResponseWriter, rr *http.Request) {
 		respBody := MountResponseJSON(ww, rr, api)
 		typeof := reflect.TypeOf(respBody).String()
 
@@ -129,10 +135,16 @@ func GetPathVariablesOfRequestOnResource(rr *Request, resource Resource) map[str
 	Retorna recurso da Api utilizado na requisição
  */
 func GetResourceOnApiOfRequest(api Api, rr *Request) Resource {
-	rs := api.resources[strings.Split(rr.URL.Path, "/")[0]]
+	baseUrl := api.BaseUrl
+	if baseUrl == "" {
+		baseUrl = "/"
+	}
+	reg := regexp.MustCompile(config.MainConfiguration.ApiPath + baseUrl).ReplaceAllString(rr.URL.Path, "")
+
+	rs := api.resources[strings.Split(reg, "/")[0]]
 	var r Resource
 	for _, element := range rs {
-		if len(element.Info.Regex.FindString(rr.URL.Path)) > 0 {
+		if len(element.Info.Regex.FindString(reg)) > 0 {
 			r = element
 			break
 		}
@@ -152,13 +164,19 @@ func (api *Api) OnNotFound(fnNotFound interface{}) *Api {
 	Registra Recurso da API
  */
 func (api *Api) Register(r Resource) *Api {
-	bars := strings.Split(r.Path, "/")
+
+	baseUrl := api.BaseUrl
+	if baseUrl == "" {
+		baseUrl = "/"
+	}
+
+	bars := strings.Split(baseUrl + r.Path, "/")
 	r.Info = ResourceInfo{}
 	r.Info.PathVariables = make(map[string]int)
 
 	for i, elem := range bars {
 		if len(regexp.MustCompile("{\\w+}").FindString(elem)) > 0 {
-			r.Info.PathVariables[regexp.MustCompile("{|}").ReplaceAllString(elem, "")] = i
+			r.Info.PathVariables[regexp.MustCompile("{|}").ReplaceAllString(elem, "")] = i + 1
 		}
 	}
 
