@@ -20,6 +20,7 @@ func main() {
 	api.Register(rest.Resource{Path: "/testando2", Method: "GET", Function: Testando2})
 	api.Register(rest.Resource{Path: "/testando3", Method: "GET", Function: Testando3})
 	api.Register(rest.Resource{Path: "/testando4", Method: "GET", Function: Testando4})
+	api.Register(rest.Resource{Path: "/testando5", Method: "GET", Function: Testando5})
 	api.ListenAndServe()
 }
 
@@ -58,12 +59,23 @@ func Testando3(w rest.Response, r *rest.Request) []byte {
 }
 
 func Testando4(w rest.Response, r *rest.Request) []byte {
+	file, err := os.Open("./teste.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	w.Header().Set("Content-Type", "application/pdf")
+	a, _ := ioutil.ReadAll(file)
+	return a
+}
+
+func Testando5(w rest.Response, r *rest.Request) []byte {
 	file, err := os.Open("./teste.zip")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	w.Header().Set("Content-Type", "multipart/form-data;")
+	w.Header().Set("Content-Type", "application/zip")
 	a, _ := ioutil.ReadAll(file)
 	return a
 }

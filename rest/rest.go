@@ -35,8 +35,15 @@ func (api Api) ListenAndServe() Api {
 	logger.MessageApiStartedLog(api.BaseUrl, api.Addr)
 	http.HandleFunc(api.BaseUrl, func(ww http.ResponseWriter, rr *http.Request) {
 		respBody := MountResponseJSON(ww, rr, api)
-		//ww.Header().Set("Content-Type", "application/json; charset=utf-8")
-		if reflect.TypeOf(respBody).String() != "[]uint8" {
+		typeof := reflect.TypeOf(respBody).String()
+
+		if ww.Header().Get("Content-Type") == "" {
+			if typeof != "string" {
+				ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+			}
+		}
+
+		if typeof != "[]uint8" {
 			respBody, _ = json.MarshalIndent(respBody, "", "  ")
 			ww.Write(respBody.([]byte))
 		} else {
