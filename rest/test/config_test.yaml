@@ -17,5 +17,5 @@ database: application_test
 api_path: /application-api
 identifier: Application 1
 mgo_dial: localhost
-addr: :8086
+addr: :8088
 base_url: /api/
