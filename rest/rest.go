@@ -23,7 +23,7 @@ type Api struct {
 /**
 	Inicializa configurações iniciais da API
  */
-func (api Api) NewMux() Api {
+func (api *Api) NewMux() *Api {
 	api.resources = make(map[string][]Resource)
 	return api
 }
@@ -40,7 +40,7 @@ func (api Api) ListenAndServe() Api {
 
 	logger.MessageApiStartedLog(config.MainConfiguration.ApiPath+baseUrl, api.Addr)
 	http.HandleFunc(config.MainConfiguration.ApiPath+baseUrl, func(ww http.ResponseWriter, rr *http.Request) {
-		respBody := MountResponseJSON(ww, rr, api)
+		respBody := mountResponseJSON(ww, rr.WithContext(rr.Context()), api)
 		typeof := reflect.TypeOf(respBody).String()
 
 		if ww.Header().Get("Content-Type") == "" {
@@ -57,9 +57,9 @@ func (api Api) ListenAndServe() Api {
 		}
 	})
 
-	error := http.ListenAndServe(api.Addr, nil)
-	if error != nil {
-		logger.ExceptionApiNotStartedLog(error.Error())
+	err := http.ListenAndServe(api.Addr, nil)
+	if err != nil {
+		logger.ExceptionApiNotStartedLog(err.Error())
 	}
 	return api
 }
@@ -67,26 +67,26 @@ func (api Api) ListenAndServe() Api {
 /**
 	Monta JSON de resposta
  */
-func MountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) interface{} {
+func mountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) interface{} {
 	request := &Request{}
 	request.Request = rr
 
 	response := Response{}
 	response.ResponseWriter = ww
 
-	args := MonteArgsListAccordingParamsToCallMethod(response, request)
-	resource := GetResourceOnApiOfRequest(api, request)
-	request.PathVariables = GetPathVariablesOfRequestOnResource(request, resource)
-	values := GetReturningValuesOfCallMethodOfResourceAccordingParams(resource, request, args, api)
+	args := mountArgsListAccordingParamsToCallMethod(response, request)
+	resource := getResourceOnApiOfRequest(api, request)
+	request.PathVariables = getPathVariablesOfRequestOnResource(request, resource)
+	values := getReturningValuesOfCallMethodOfResourceAccordingParams(resource, request, args, api)
 
-	respBody := MountRespBodyAccordingValues(values)
+	respBody := mountRespBodyAccordingValues(values)
 	return respBody
 }
 
 /**
 	Função que monta um json de acordo com a lista de valores. Utilizada na função MountResponseJSON
  */
-func MountRespBodyAccordingValues(values []reflect.Value) interface{} {
+func mountRespBodyAccordingValues(values []reflect.Value) interface{} {
 	var respBody interface{}
 	if values != nil && len(values) > 0 {
 		respBody = values[0].Interface()
@@ -99,7 +99,7 @@ func MountRespBodyAccordingValues(values []reflect.Value) interface{} {
 /**
 	Verifica método da requisição com do recurso utilizado, e chama a função do recurso com determinados argumentos. Se o método do recurso for diferente da requisição, é retornado o método NotFound da api
  */
-func GetReturningValuesOfCallMethodOfResourceAccordingParams(resource Resource, rr *Request, args []reflect.Value, api Api) []reflect.Value {
+func getReturningValuesOfCallMethodOfResourceAccordingParams(resource Resource, rr *Request, args []reflect.Value, api Api) []reflect.Value {
 	var values []reflect.Value
 	if resource.Method == rr.Method {
 		values = reflect.ValueOf(resource.Function).Call(args)
@@ -112,7 +112,7 @@ func GetReturningValuesOfCallMethodOfResourceAccordingParams(resource Resource, 
 /**
 	Monta lista de argumentos que serão utilizados no método GetReturningValuesOfCallMethodOfResourceAccordingParams
  */
-func MonteArgsListAccordingParamsToCallMethod(response Response, request *Request) []reflect.Value {
+func mountArgsListAccordingParamsToCallMethod(response Response, request *Request) []reflect.Value {
 	args := make([]reflect.Value, 2)
 	args[0] = reflect.ValueOf(response)
 	args[1] = reflect.ValueOf(request)
@@ -122,7 +122,7 @@ func MonteArgsListAccordingParamsToCallMethod(response Response, request *Reques
 /**
 	Retorna Lista de variáveis de URL de acordo com a requisição e recurso
  */
-func GetPathVariablesOfRequestOnResource(rr *Request, resource Resource) map[string]interface{} {
+func getPathVariablesOfRequestOnResource(rr *Request, resource Resource) map[string]interface{} {
 	splitUrl := strings.Split(rr.URL.Path, "/")
 	aux := make(map[string]interface{})
 	for key, element := range resource.Info.PathVariables {
@@ -134,7 +134,7 @@ func GetPathVariablesOfRequestOnResource(rr *Request, resource Resource) map[str
 /**
 	Retorna recurso da Api utilizado na requisição
  */
-func GetResourceOnApiOfRequest(api Api, rr *Request) Resource {
+func getResourceOnApiOfRequest(api Api, rr *Request) Resource {
 	baseUrl := api.BaseUrl
 	if baseUrl == "" {
 		baseUrl = "/"
@@ -165,12 +165,13 @@ func (api *Api) OnNotFound(fnNotFound interface{}) *Api {
  */
 func (api *Api) Register(r Resource) *Api {
 
+
 	baseUrl := api.BaseUrl
 	if baseUrl == "" {
 		baseUrl = "/"
 	}
 
-	bars := strings.Split(baseUrl + r.Path, "/")
+	bars := strings.Split(baseUrl+r.Path, "/")
 	r.Info = ResourceInfo{}
 	r.Info.PathVariables = make(map[string]int)
 
@@ -182,10 +183,18 @@ func (api *Api) Register(r Resource) *Api {
 
 	r.Info.Regex, _ = regexp.Compile("^" + regexp.MustCompile("{\\w+}").ReplaceAllString(r.Path, "(\\w+)") + "$")
 	pos := strings.Split(r.Path, "/")[0]
+
 	api.resources[pos] = append(api.resources[pos], r)
 
 	logger.MessageResourceStartedLog(r.Path)
 
+	return api
+}
+
+func (api *Api) RegisterAll(r []Resource) *Api {
+	for _, elm := range r {
+		api.Register(elm)
+	}
 	return api
 }
 

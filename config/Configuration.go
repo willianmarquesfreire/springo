@@ -20,6 +20,9 @@ type Configuration struct {
 	Database    string    `yaml:"database"`
 	ApiPath     string    `yaml:"api_path"`
 	Identifier  string    `yaml:"identifier"`
+	MgoDial     string    `yaml:"mgo_dial"`
+	Addr        string    `yaml:"addr"`
+	BaseUrl     string    `yaml:"base_url"`
 }
 
 var MainConfiguration Configuration
@@ -67,7 +70,10 @@ func createMockConfigTest() Configuration {
 		Debug:       true,
 		Database:    "application_test",
 		ApiPath:     "/application-api",
-		Identifier: "Application 1",
+		Identifier:  "Application 1",
+		MgoDial:     "localhost",
+		Addr:        ":8086",
+		BaseUrl:     "/api/",
 	}
 }
 
