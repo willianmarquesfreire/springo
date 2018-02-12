@@ -30,6 +30,7 @@ type Search struct {
 type Service struct {
 	Domain   interface{}
 	Document string
+	TokenScope domain.Token
 }
 
 func (service Service) FindAll(search Search) (Result, error) {

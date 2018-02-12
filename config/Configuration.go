@@ -72,7 +72,7 @@ func createMockConfigTest() Configuration {
 		ApiPath:     "/application-api",
 		Identifier:  "Application 1",
 		MgoDial:     "localhost",
-		Addr:        ":8086",
+		Addr:        ":8088",
 		BaseUrl:     "/api/",
 	}
 }

@@ -39,14 +39,14 @@ type Error struct {
 	Code    int    `json:"code"`
 }
 
-func (r RestResource) GetResources() []Resource{
+func (r *RestResource) GetResources() []Resource{
 	resources := []Resource{
-		Resource{Path: r.Path, Method: "GET", Function: r.GetAll},
-		Resource{Path: r.Path + "/{id}", Method: "DELETE", Function: r.Delete},
-		Resource{Path: r.Path + "/{id}", Method: "GET", Function: r.Get},
-		Resource{Path: r.Path, Method: "POST", Function: r.Post},
-		Resource{Path: r.Path + "/{id}", Method: "PUT", Function: r.Put},
-		Resource{Path: r.Path + "/{id}", Method: "PATCH", Function: r.Patch},
+		Resource{Path: r.Path, Method: "GET", Function: r.GetAll, Info:ResourceInfo{RestResource:r}},
+		Resource{Path: r.Path + "/{id}", Method: "DELETE", Function: r.Delete, Info:ResourceInfo{RestResource:r}},
+		Resource{Path: r.Path + "/{id}", Method: "GET", Function: r.Get, Info:ResourceInfo{RestResource:r}},
+		Resource{Path: r.Path, Method: "POST", Function: r.Post, Info:ResourceInfo{RestResource:r}},
+		Resource{Path: r.Path + "/{id}", Method: "PUT", Function: r.Put, Info:ResourceInfo{RestResource:r}},
+		Resource{Path: r.Path + "/{id}", Method: "PATCH", Function: r.Patch, Info:ResourceInfo{RestResource:r}},
 	}
 	if r.Resources == nil {
 		r.Resources = resources
@@ -56,16 +56,16 @@ func (r RestResource) GetResources() []Resource{
 	return r.Resources
 }
 
-func (r RestResource) AddResource(resource Resource) RestResource {
+func (r *RestResource) AddResource(resource Resource) RestResource {
+	resource.Info.RestResource = r
 	r.Resources = append(r.Resources, resource)
-	return r
+	return *r
 }
 
 func (r RestResource) RegisterOn(api *Api) RestResource {
 	api.RegisterAll(r.GetResources())
 	return r
 }
-
 
 func GetParam(r *Request, param string) string {
 	var resp string

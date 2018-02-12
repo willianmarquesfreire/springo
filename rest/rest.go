@@ -18,6 +18,7 @@ type Api struct {
 	Addr      string
 	NotFound  interface{}
 	BaseUrl   string
+	Handlers  []func(ww Response, rr *Request, resource Resource) error
 }
 
 /**
@@ -25,6 +26,7 @@ type Api struct {
  */
 func (api *Api) NewMux() *Api {
 	api.resources = make(map[string][]Resource)
+	api.Handlers = []func(ww Response, rr *Request, resource Resource) error{}
 	return api
 }
 
@@ -40,12 +42,25 @@ func (api Api) ListenAndServe() Api {
 
 	logger.MessageApiStartedLog(config.MainConfiguration.ApiPath+baseUrl, api.Addr)
 	http.HandleFunc(config.MainConfiguration.ApiPath+baseUrl, func(ww http.ResponseWriter, rr *http.Request) {
-		respBody := mountResponseJSON(ww, rr.WithContext(rr.Context()), api)
+
+		request := &Request{}
+		request.Request = rr
+
+		response := Response{}
+		response.ResponseWriter = ww
+
+		respBody := mountResponseJSON(response, request, api)
 		typeof := reflect.TypeOf(respBody).String()
 
 		if ww.Header().Get("Content-Type") == "" {
 			if typeof != "string" {
 				ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+			}
+		}
+
+		if typeof == "*errors.errorString" {
+			respBody = ResponseError{
+				Error: respBody.(error).Error(),
 			}
 		}
 
@@ -55,6 +70,7 @@ func (api Api) ListenAndServe() Api {
 		} else {
 			ww.Write(respBody.([]uint8))
 		}
+
 	})
 
 	err := http.ListenAndServe(api.Addr, nil)
@@ -67,15 +83,20 @@ func (api Api) ListenAndServe() Api {
 /**
 	Monta JSON de resposta
  */
-func mountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) interface{} {
-	request := &Request{}
-	request.Request = rr
-
-	response := Response{}
-	response.ResponseWriter = ww
+func mountResponseJSON(response Response, request *Request, api Api) interface{} {
 
 	args := mountArgsListAccordingParamsToCallMethod(response, request)
 	resource := getResourceOnApiOfRequest(api, request)
+
+	if api.Handlers != nil && len(api.Handlers) > 0 {
+		for _, elm := range api.Handlers {
+			err := elm(response, request, resource)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	request.PathVariables = getPathVariablesOfRequestOnResource(request, resource)
 	values := getReturningValuesOfCallMethodOfResourceAccordingParams(resource, request, args, api)
 
@@ -88,8 +109,13 @@ func mountResponseJSON(ww http.ResponseWriter, rr *http.Request, api Api) interf
  */
 func mountRespBodyAccordingValues(values []reflect.Value) interface{} {
 	var respBody interface{}
+
 	if values != nil && len(values) > 0 {
-		respBody = values[0].Interface()
+		if len(values) == 2 {
+			respBody = values[1].Interface()
+		} else {
+			respBody = values[0].Interface()
+		}
 	} else {
 		respBody, _ = json.MarshalIndent(values, "", "  ")
 	}
@@ -165,6 +191,14 @@ func (api *Api) OnNotFound(fnNotFound interface{}) *Api {
 }
 
 /**
+	Função que adiciona interceptores de requisição
+ */
+func (api *Api) AddHandler(fn func(ww Response, rr *Request, resource Resource) error) *Api {
+	api.Handlers = append(api.Handlers, fn)
+	return api
+}
+
+/**
 	Registra Recurso da API
  */
 func (api *Api) Register(r Resource) *Api {
@@ -175,7 +209,6 @@ func (api *Api) Register(r Resource) *Api {
 	}
 
 	bars := strings.Split(baseUrl+r.Path, "/")
-	r.Info = ResourceInfo{}
 	r.Info.PathVariables = make(map[string]int)
 
 	for i, elem := range bars {
@@ -207,6 +240,7 @@ func (api *Api) RegisterAll(r []Resource) *Api {
 type ResourceInfo struct {
 	PathVariables map[string]int
 	Regex         *regexp.Regexp
+	RestResource  *RestResource
 }
 
 /**
@@ -232,4 +266,9 @@ type Request struct {
  */
 type Response struct {
 	http.ResponseWriter
+}
+
+type ResponseError struct {
+	Error       string `json:"error"`
+	Description string `json:"description"`
 }
