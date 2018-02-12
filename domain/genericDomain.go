@@ -28,27 +28,27 @@ func (g *GenericDomain) ChangeId() {
 	var id bson.ObjectId = bson.NewObjectId()
 	g.ID = &id
 }
-//
-//func (g *GenericDomain) ChangeUI(ui string) {
-//	g.UI = ui
-//}
-//
-//func (g *GenericDomain) ChangeGI(gi string) {
-//	g.GI = gi
-//}
-//
-//func (g *GenericDomain) ChangeRights(rights int32) {
-//	g.Rights = rights
-//}
-//
-//func (g *GenericDomain) GetRights() int32 {
-//	return g.Rights
-//}
-//
-//func (g GenericDomain) ChangeCreated() {
-//	g.Created = time.Now()
-//}
-//
-//func (g GenericDomain) Value() interface{} {
-//	return g
-//}
+
+func (g *GenericDomain) ChangeUI(ui string) {
+	g.UI = ui
+}
+
+func (g *GenericDomain) ChangeGI(gi string) {
+	g.GI = gi
+}
+
+func (g *GenericDomain) ChangeRights(rights int32) {
+	g.Rights = rights
+}
+
+func (g *GenericDomain) GetRights() int32 {
+	return g.Rights
+}
+
+func (g GenericDomain) ChangeCreated() {
+	g.Created = time.Now()
+}
+
+func (g GenericDomain) Value() interface{} {
+	return g
+}

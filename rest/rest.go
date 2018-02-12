@@ -139,12 +139,16 @@ func getResourceOnApiOfRequest(api Api, rr *Request) Resource {
 	if baseUrl == "" {
 		baseUrl = "/"
 	}
-	reg := regexp.MustCompile(config.MainConfiguration.ApiPath + baseUrl).ReplaceAllString(rr.URL.Path, "")
+	urlPath := rr.URL.Path
+	if strings.HasSuffix(urlPath, "/") {
+		urlPath = strings.TrimSuffix(urlPath, "/")
+	}
+	reg := regexp.MustCompile(config.MainConfiguration.ApiPath + baseUrl).ReplaceAllString(urlPath, "")
 
 	rs := api.resources[strings.Split(reg, "/")[0]]
 	var r Resource
 	for _, element := range rs {
-		if len(element.Info.Regex.FindString(reg)) > 0 {
+		if len(element.Info.Regex.FindString(reg)) > 0 && element.Method == rr.Method {
 			r = element
 			break
 		}
@@ -164,7 +168,6 @@ func (api *Api) OnNotFound(fnNotFound interface{}) *Api {
 	Registra Recurso da API
  */
 func (api *Api) Register(r Resource) *Api {
-
 
 	baseUrl := api.BaseUrl
 	if baseUrl == "" {

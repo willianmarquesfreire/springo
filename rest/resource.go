@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"gopkg.in/mgo.v2/bson"
 	"encoding/json"
-	"log"
 	"reflect"
 	"springo/domain"
 )
@@ -46,7 +45,8 @@ func (r RestResource) GetResources() []Resource{
 		Resource{Path: r.Path + "/{id}", Method: "DELETE", Function: r.Delete},
 		Resource{Path: r.Path + "/{id}", Method: "GET", Function: r.Get},
 		Resource{Path: r.Path, Method: "POST", Function: r.Post},
-		Resource{Path: r.Path + "/{id}", Method: "GET", Function: r.Put},
+		Resource{Path: r.Path + "/{id}", Method: "PUT", Function: r.Put},
+		Resource{Path: r.Path + "/{id}", Method: "PATCH", Function: r.Patch},
 	}
 	if r.Resources == nil {
 		r.Resources = resources
@@ -92,7 +92,6 @@ func NewSearch(r *Request) Search {
 		M = bson.M{}
 	} else {
 		json.Unmarshal([]byte(strM), &M)
-		log.Println("---->", M)
 	}
 	qo.M = M
 	return qo
@@ -104,10 +103,7 @@ func (resource RestResource) GetAll(w Response, r *Request) Result {
 }
 
 func (resource RestResource) Post(w Response, r *Request) interface{} {
-	valueType := reflect.New(reflect.TypeOf(resource.Domain))
-	decoder := json.NewDecoder(r.Body)
-	var value domain.GenericInterface = valueType.Interface().(domain.GenericInterface)
-	decoder.Decode(value)
+	value := resource.DecodeBody(r)
 	saved, _ := resource.Service.Insert(value)
 	return saved
 }
@@ -119,15 +115,26 @@ func (resource RestResource) Get(w Response, r *Request) interface{} {
 }
 
 func (resource RestResource) Put(w Response, r *Request) interface{} {
-	valueType := reflect.New(reflect.TypeOf(resource.Domain))
-	decoder := json.NewDecoder(r.Body)
-	var value domain.GenericInterface = valueType.Interface().(domain.GenericInterface)
-	decoder.Decode(value)
+	value := resource.DecodeBody(r)
 	saved, _ := resource.Service.Update(r.PathVariables["id"].(string), value)
+	return saved
+}
+
+func (resource RestResource) Patch(w Response, r *Request) interface{} {
+	value := resource.DecodeBody(r)
+	saved, _ := resource.Service.Set(r.PathVariables["id"].(string), value)
 	return saved
 }
 
 func (resource RestResource) Delete(w Response, r *Request) string {
 	toReturn, _ := resource.Service.Drop(r.PathVariables["id"].(string))
 	return toReturn
+}
+
+func (resource RestResource) DecodeBody(r *Request) domain.GenericInterface {
+	valueType := reflect.New(reflect.TypeOf(resource.Domain))
+	decoder := json.NewDecoder(r.Body)
+	var value domain.GenericInterface = valueType.Interface().(domain.GenericInterface)
+	decoder.Decode(value)
+	return value
 }

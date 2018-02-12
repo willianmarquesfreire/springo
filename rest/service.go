@@ -10,6 +10,7 @@ import (
 	"errors"
 	"springo/config"
 	"springo/logger"
+	"springo/util/mongo"
 )
 
 type Result struct {
@@ -27,9 +28,10 @@ type Search struct {
 }
 
 type Service struct {
-	Domain interface{}
+	Domain   interface{}
 	Document string
 }
+
 func (service Service) FindAll(search Search) (Result, error) {
 	session := Session.Copy()
 	defer session.Close()
@@ -78,6 +80,16 @@ func (service Service) Update(id string, value domain.GenericInterface) (domain.
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
 
 	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id)}, &value)
+	return value, error
+}
+
+func (service Service) Set(id string, value domain.GenericInterface) (domain.GenericInterface, error) {
+	session := Session.Copy()
+	defer session.Close()
+	c := session.DB(config.MainConfiguration.Database).C(service.Document)
+	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": mongo.GetBsonMSet(value)})
+	updated, error := service.Find(id)
+	value = updated.(domain.GenericInterface)
 	return value, error
 }
 
