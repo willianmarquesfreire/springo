@@ -23,6 +23,7 @@ var UserService = UserServiceType{
 var UserResource = rest.RestResource{
 	Path:    "user",
 	Service: &UserService.Service,
+	Domain: domain.User{},
 }
 
 func main() {
@@ -31,12 +32,12 @@ func main() {
 
 	rest.CurrentApi.OnNotFound(NotFound)
 	UserResource.RegisterOn(rest.CurrentApi)
-	rest.CurrentApi.Register(rest.Resource{Path: "testando/{nome}", Method: "GET", Function: Testando})
-	rest.CurrentApi.Register(rest.Resource{Path: "testando1/\\d", Method: "GET", Function: Testando1})
-	rest.CurrentApi.Register(rest.Resource{Path: "testando2", Method: "GET", Function: Testando2})
-	rest.CurrentApi.Register(rest.Resource{Path: "testando3", Method: "GET", Function: Testando3})
-	rest.CurrentApi.Register(rest.Resource{Path: "testando4", Method: "GET", Function: Testando4})
-	rest.CurrentApi.Register(rest.Resource{Path: "testando5", Method: "GET", Function: Testando5})
+	rest.CurrentApi.Register(rest.Resource{Path: "parametro-nome/{nome}", Method: "GET", Function: ParametroNome})
+	rest.CurrentApi.Register(rest.Resource{Path: "parametro-regex/\\d", Method: "GET", Function: ParametroRegex})
+	rest.CurrentApi.Register(rest.Resource{Path: "testando-endereco", Method: "GET", Function: TestandoEndereco})
+	rest.CurrentApi.Register(rest.Resource{Path: "testando-png", Method: "GET", Function: TestandoPng})
+	rest.CurrentApi.Register(rest.Resource{Path: "testando-pdf", Method: "GET", Function: TestandoPdf})
+	rest.CurrentApi.Register(rest.Resource{Path: "testando-zip", Method: "GET", Function: TestandoZip})
 	rest.CurrentApi.ListenAndServe()
 }
 
@@ -48,21 +49,21 @@ type Endereco struct {
 	Rua string `json:"rua"`
 }
 
-func Testando(w rest.Response, r *rest.Request) Pessoa {
+func ParametroNome(w rest.Response, r *rest.Request) Pessoa {
 	a := r.PathVariables["nome"]
 	return Pessoa{Nome: a.(string)}
 }
 
-func Testando1(w rest.Response, r *rest.Request) string {
+func ParametroRegex(w rest.Response, r *rest.Request) string {
 	return "Willian"
 }
 
-func Testando2(w rest.Response, r *rest.Request) Endereco {
+func TestandoEndereco(w rest.Response, r *rest.Request) Endereco {
 
 	return Endereco{Rua: "Rua Willian"}
 }
 
-func Testando3(w rest.Response, r *rest.Request) []byte {
+func TestandoPng(w rest.Response, r *rest.Request) []byte {
 	img, err := os.Open("./teste.png")
 	if err != nil {
 		log.Fatal(err)
@@ -74,7 +75,7 @@ func Testando3(w rest.Response, r *rest.Request) []byte {
 
 }
 
-func Testando4(w rest.Response, r *rest.Request) []byte {
+func TestandoPdf(w rest.Response, r *rest.Request) []byte {
 	file, err := os.Open("./teste.pdf")
 	if err != nil {
 		log.Fatal(err)
@@ -85,7 +86,7 @@ func Testando4(w rest.Response, r *rest.Request) []byte {
 	return a
 }
 
-func Testando5(w rest.Response, r *rest.Request) []byte {
+func TestandoZip(w rest.Response, r *rest.Request) []byte {
 	file, err := os.Open("./teste.zip")
 	if err != nil {
 		log.Fatal(err)

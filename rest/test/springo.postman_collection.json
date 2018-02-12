@@ -1,0 +1,159 @@
+{
+	"variables": [],
+	"info": {
+		"name": "springo",
+		"_postman_id": "f92714d9-6bf9-c4bc-7a79-a212190f148e",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "user - POST",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/user",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"Login\": \"teste\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "user - GET",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/user",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "user - PUT",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/user/5a81d03233213a5e772943af",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"password\": \"sadasdasdsad\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "user - DELETE",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/user/5a81ce4033213a5cdbeaf262",
+				"method": "DELETE",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "user - PATCH",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/user/5a81d03233213a5e772943af",
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"login\": \"qweqweqwe\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Parametro Regex",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/parametro-regex/1",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Parametro Nome",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/parametro-nome/willian",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Testando Endereco",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/testando-endereco",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Testando Png",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/testando-png",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Testando Pdf",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/testando-pdf",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Testando Zip",
+			"request": {
+				"url": "http://localhost:8086/application-api/api/testando-zip",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
