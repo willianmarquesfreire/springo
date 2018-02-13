@@ -3,6 +3,7 @@ package domain
 import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"springo/core"
 )
 
 type User struct {
@@ -27,6 +28,11 @@ func (g User) ChangeGI(gi string) {
 
 func (g User) ChangeRights(rights int32) {
 	g.Rights = rights
+}
+
+func (g User) WithDefaultRights() *User {
+	g.Rights = core.DEFAULT_RIGHTS.Value
+	return &g
 }
 
 func (g User) GetRights() int32 {

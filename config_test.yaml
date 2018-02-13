@@ -15,7 +15,7 @@ max_replicas: 5
 debug: true
 database: application_test
 api_path: /application-api
-identifier: Application 1
+identifier: br.com.app
 mgo_dial: localhost
 addr: :8088
 base_url: /api/

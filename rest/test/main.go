@@ -19,7 +19,7 @@ func Start() {
 	rest.CurrentApi.Register(rest.Resource{Path: "testando-png", Method: "GET", Function: resources.TestandoPng})
 	rest.CurrentApi.Register(rest.Resource{Path: "testando-pdf", Method: "GET", Function: resources.TestandoPdf})
 	rest.CurrentApi.Register(rest.Resource{Path: "testando-zip", Method: "GET", Function: resources.TestandoZip})
-	rest.CurrentApi.Register(rest.Resource{Path: "public/authenticate/{token}", Method: "GET", Function: resources.Authenticate})
+	rest.CurrentApi.Register(rest.Resource{Path: "public/authenticate/{app}/{token}", Method: "GET", Function: resources.Authenticate})
 	rest.CurrentApi.RegisterAll(resources.UserResource.GetResources())
 	rest.CurrentApi.RegisterAll(resources.TokenResource.GetResources())
 	rest.CurrentApi.RegisterAll(resources.SoftwareResource.GetResources())

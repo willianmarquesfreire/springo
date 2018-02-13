@@ -8,7 +8,7 @@ import (
 	"springo/domain"
 	"strings"
 	"net/http"
-	"errors"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Pessoa struct {
@@ -24,14 +24,24 @@ func ParametroNome(w rest.Response, r *rest.Request) Pessoa {
 	return Pessoa{Nome: a.(string)}
 }
 
-func Authenticate(w rest.Response, r *rest.Request) (*domain.Token, error) {
+func Authenticate(w rest.Response, r *rest.Request) (*domain.Token) {
 	if strings.Contains(r.PathVariables["token"].(string), "bloquea") {
 		w.WriteHeader(http.StatusForbidden)
-		return nil, errors.New("erro")
+		return nil
 	}
-	return &domain.Token{
-		Information: r.PathVariables["token"].(string),
-	}, nil
+	return domain.Token{
+		Information: bson.NewObjectId().String(),
+		Group:domain.Group{
+			Software:&domain.Software{
+				Name:r.PathVariables["app"].(string),
+				Url:r.PathVariables["app"].(string),
+			},
+			Name:"app",
+		}.WithDefaultRights(),
+		User:domain.User{
+			Login:"willianmarquesfreire@gmail.com",
+		}.WithDefaultRights(),
+	}.WithDefaultRights()
 }
 
 func ParametroRegex(w rest.Response, r *rest.Request) string {

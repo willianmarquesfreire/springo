@@ -3,6 +3,7 @@ package domain
 import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"springo/core"
 )
 
 type GenericInterface interface {
@@ -11,6 +12,7 @@ type GenericInterface interface {
 	ChangeGI(gi string)
 	ChangeRights(rights int32)
 	GetRights() int32
+	WithDefaultRights() *GenericDomain
 	Value() interface{}
 	ChangeCreated()
 }
@@ -39,6 +41,11 @@ func (g *GenericDomain) ChangeGI(gi string) {
 
 func (g *GenericDomain) ChangeRights(rights int32) {
 	g.Rights = rights
+}
+
+func (g *GenericDomain) WithDefaultRights() *GenericDomain {
+	g.Rights = core.DEFAULT_RIGHTS.Value
+	return g
 }
 
 func (g *GenericDomain) GetRights() int32 {

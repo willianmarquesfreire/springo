@@ -8,7 +8,7 @@ import (
 	"strings"
 	"springo/logger"
 	"springo/config"
-	"fmt"
+	"springo/util/reflection"
 )
 
 /**
@@ -52,21 +52,20 @@ func (api Api) ListenAndServe() Api {
 
 		respBody := mountResponseJSON(response, request, api)
 		if respBody != nil {
-			typeof := reflect.TypeOf(respBody).String()
-
+			typeof := reflect.TypeOf(respBody)
 			if ww.Header().Get("Content-Type") == "" {
-				if typeof != "string" {
+				if typeof.String() != "string" {
 					ww.Header().Set("Content-Type", "application/json; charset=utf-8")
 				}
 			}
 
-			if typeof == "*errors.errorString" {
+			if reflection.IsError(respBody) {
 				respBody = ResponseError{
 					Error: respBody.(error).Error(),
 				}
 			}
 
-			if typeof != "[]uint8" {
+			if typeof.String() != "[]uint8" {
 				respBody, _ = json.MarshalIndent(respBody, "", "  ")
 				ww.Write(respBody.([]byte))
 			} else {
@@ -122,7 +121,6 @@ func mountRespBodyAccordingValues(values []reflect.Value) interface{} {
 	} else {
 		respBody, _ = json.MarshalIndent(values, "", "  ")
 	}
-			fmt.Println(respBody)
 	return respBody
 }
 
@@ -221,7 +219,7 @@ func (api *Api) Register(r Resource) *Api {
 		}
 	}
 
-	r.Info.Regex, _ = regexp.Compile("^" + regexp.MustCompile("{\\w+}").ReplaceAllString(r.Path, "(\\w+)") + "$")
+	r.Info.Regex, _ = regexp.Compile("^" + regexp.MustCompile("{\\w+}").ReplaceAllString(r.Path, "(\\w+(\\.|\\-|\\!|\\@|\\#|\\$|\\%|\\&|\\*)*\\w*)+") + "$")
 	pos := strings.Split(r.Path, "/")[0]
 
 	api.resources[pos] = append(api.resources[pos], r)

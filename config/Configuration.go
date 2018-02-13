@@ -71,7 +71,7 @@ func createMockConfigTest() Configuration {
 		Debug:       true,
 		Database:    "application_test",
 		ApiPath:     "/application-api",
-		Identifier:  "Application 1",
+		Identifier:  "br.com.app",
 		MgoDial:     "localhost",
 		Addr:        ":8088",
 		BaseUrl:     "/api/",

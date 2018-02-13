@@ -11,6 +11,11 @@ type Attr struct {
 	Value reflect.Value
 }
 
+func IsError(obj interface{}) bool {
+	_, b := reflect.TypeOf(obj).MethodByName("Error")
+	return b
+}
+
 func IsPointer(obj interface{}) bool {
 	return strings.Contains(reflect.TypeOf(obj).String(), "*")
 }
