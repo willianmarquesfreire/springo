@@ -19,3 +19,4 @@ identifier: Application 1
 mgo_dial: localhost
 addr: :8088
 base_url: /api/
+security_url: http://localhost:8088/application-api

@@ -4,7 +4,11 @@ import (
 	"springo/config"
 	"gopkg.in/mgo.v2"
 	"springo/domain"
+	"strings"
+	"springo/proxy"
+	"encoding/json"
 	"net/http"
+	"errors"
 )
 
 var (
@@ -14,15 +18,27 @@ var (
 )
 
 func Handler(ww Response, rr *Request, resource Resource) error {
-	let := GetParam(rr, "wtoken")
-	if resource.Info.RestResource != nil && resource.Info.RestResource.Service != nil{
-		resource.Info.RestResource.Service.TokenScope = domain.Token{
-			Information: let,
-		}
+	wtoken := GetParam(rr, "wtoken")
+
+	if strings.Contains(rr.URL.Path, "/public") {
+		return nil
 	}
-	ww.Header().Set("Content-Type", "application/json; charset=utf-8")
-	ww.WriteHeader(http.StatusBadRequest)
-	return nil
+
+	resp,err := proxy.Authenticate(wtoken)
+	if resp.StatusCode == http.StatusForbidden {
+		ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+		ww.WriteHeader(http.StatusForbidden)
+		return errors.New("Forbidden")
+	}
+	var token domain.Token
+	err = json.NewDecoder(resp.Body).Decode(&token)
+
+	if resource.Info.RestResource != nil && resource.Info.RestResource.Service != nil{
+		resource.Info.RestResource.Service.TokenScope = token
+	}
+
+	//ww.WriteHeader(http.StatusBadRequest)
+	return err
 }
 
 func StartSession() *mgo.Session{

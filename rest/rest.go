@@ -8,6 +8,7 @@ import (
 	"strings"
 	"springo/logger"
 	"springo/config"
+	"fmt"
 )
 
 /**
@@ -50,25 +51,27 @@ func (api Api) ListenAndServe() Api {
 		response.ResponseWriter = ww
 
 		respBody := mountResponseJSON(response, request, api)
-		typeof := reflect.TypeOf(respBody).String()
+		if respBody != nil {
+			typeof := reflect.TypeOf(respBody).String()
 
-		if ww.Header().Get("Content-Type") == "" {
-			if typeof != "string" {
-				ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+			if ww.Header().Get("Content-Type") == "" {
+				if typeof != "string" {
+					ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+				}
 			}
-		}
 
-		if typeof == "*errors.errorString" {
-			respBody = ResponseError{
-				Error: respBody.(error).Error(),
+			if typeof == "*errors.errorString" {
+				respBody = ResponseError{
+					Error: respBody.(error).Error(),
+				}
 			}
-		}
 
-		if typeof != "[]uint8" {
-			respBody, _ = json.MarshalIndent(respBody, "", "  ")
-			ww.Write(respBody.([]byte))
-		} else {
-			ww.Write(respBody.([]uint8))
+			if typeof != "[]uint8" {
+				respBody, _ = json.MarshalIndent(respBody, "", "  ")
+				ww.Write(respBody.([]byte))
+			} else {
+				ww.Write(respBody.([]uint8))
+			}
 		}
 
 	})
@@ -111,7 +114,7 @@ func mountRespBodyAccordingValues(values []reflect.Value) interface{} {
 	var respBody interface{}
 
 	if values != nil && len(values) > 0 {
-		if len(values) == 2 {
+		if len(values) == 2 && !(values[1].IsNil()){
 			respBody = values[1].Interface()
 		} else {
 			respBody = values[0].Interface()
@@ -119,6 +122,7 @@ func mountRespBodyAccordingValues(values []reflect.Value) interface{} {
 	} else {
 		respBody, _ = json.MarshalIndent(values, "", "  ")
 	}
+			fmt.Println(respBody)
 	return respBody
 }
 

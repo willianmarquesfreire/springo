@@ -5,6 +5,10 @@ import (
 	"log"
 	"io/ioutil"
 	"springo/rest"
+	"springo/domain"
+	"strings"
+	"net/http"
+	"errors"
 )
 
 type Pessoa struct {
@@ -18,6 +22,16 @@ type Endereco struct {
 func ParametroNome(w rest.Response, r *rest.Request) Pessoa {
 	a := r.PathVariables["nome"]
 	return Pessoa{Nome: a.(string)}
+}
+
+func Authenticate(w rest.Response, r *rest.Request) (*domain.Token, error) {
+	if strings.Contains(r.PathVariables["token"].(string), "bloquea") {
+		w.WriteHeader(http.StatusForbidden)
+		return nil, errors.New("erro")
+	}
+	return &domain.Token{
+		Information: r.PathVariables["token"].(string),
+	}, nil
 }
 
 func ParametroRegex(w rest.Response, r *rest.Request) string {

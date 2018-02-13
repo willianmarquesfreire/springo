@@ -23,6 +23,7 @@ type Configuration struct {
 	MgoDial     string    `yaml:"mgo_dial"`
 	Addr        string    `yaml:"addr"`
 	BaseUrl     string    `yaml:"base_url"`
+	SecurityUrl string    `yaml:"security_url"`
 }
 
 var MainConfiguration Configuration
@@ -74,6 +75,7 @@ func createMockConfigTest() Configuration {
 		MgoDial:     "localhost",
 		Addr:        ":8088",
 		BaseUrl:     "/api/",
+		SecurityUrl: "http://localhost:8088/application-api",
 	}
 }
 
