@@ -6,9 +6,10 @@ import (
 	"fmt"
 )
 
+const Authorization = "/api/public/authorize"
 const Authentication = "/api/public/authenticate"
 
-func Authenticate(token string) (*http.Response, error) {
-	fmt.Println(config.MainConfiguration.SecurityUrl + Authentication + "/" + config.MainConfiguration.Identifier + "/" + token)
-	return http.Get(config.MainConfiguration.SecurityUrl + Authentication + "/" + config.MainConfiguration.Identifier + "/" + token)
+func Authorize(token string) (*http.Response, error) {
+	fmt.Println(config.MainConfiguration.SecurityUrl + Authorization + "/" + config.MainConfiguration.Identifier + "/" + token)
+	return http.Get(config.MainConfiguration.SecurityUrl + Authorization + "/" + config.MainConfiguration.Identifier + "/" + token)
 }

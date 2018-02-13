@@ -17,6 +17,6 @@ database: application_test
 api_path: /application-api
 identifier: br.com.app
 mgo_dial: localhost
-addr: :8088
+addr: :8086
 base_url: /api/
-security_url: http://localhost:8088/application-api
+security_url: http://localhost:8086/application-api

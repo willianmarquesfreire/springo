@@ -11,6 +11,7 @@ import (
 	"springo/config"
 	"springo/logger"
 	"springo/util/mongo"
+	"fmt"
 )
 
 type Result struct {
@@ -28,8 +29,8 @@ type Search struct {
 }
 
 type Service struct {
-	Domain   interface{}
-	Document string
+	Domain     interface{}
+	Document   string
 	TokenScope domain.Token
 }
 
@@ -38,6 +39,10 @@ func (service Service) FindAll(search Search) (Result, error) {
 	defer session.Close()
 
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
+
+	if service.TokenScope.User != nil {
+		search.M["$and"] = GetCriteria(service)
+	}
 
 	my := service.Domain
 	myType := reflect.TypeOf(my)
@@ -67,6 +72,11 @@ func (service Service) Insert(value domain.GenericInterface) (domain.GenericInte
 	}
 	value.ChangeCreated()
 
+	if service.TokenScope.User != nil {
+		value.ChangeUI(service.TokenScope.User.Login)
+		value.ChangeGI(service.TokenScope.Group.ID.Hex() + ",")
+	}
+
 	error := c.Insert(&value)
 	if error != nil {
 		log.Fatalln(error)
@@ -79,8 +89,9 @@ func (service Service) Update(id string, value domain.GenericInterface) (domain.
 	session := Session.Copy()
 	defer session.Close()
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
+	criteria := GetCriteria(service)
 
-	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id)}, &value)
+	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id), "$and": criteria}, &value)
 	return value, error
 }
 
@@ -88,7 +99,8 @@ func (service Service) Set(id string, value domain.GenericInterface) (domain.Gen
 	session := Session.Copy()
 	defer session.Close()
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
-	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": mongo.GetBsonMSet(value)})
+	criteria := GetCriteria(service)
+	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id), "$and": criteria}, bson.M{"$set": mongo.GetBsonMSet(value)})
 	updated, error := service.Find(id)
 	value = updated.(domain.GenericInterface)
 	return value, error
@@ -102,19 +114,31 @@ func (service Service) Collection() (*mgo.Collection) {
 }
 
 func (service Service) Find(id string) (interface{}, error) {
-
 	if !bson.IsObjectIdHex(id) {
 		return nil, errors.New(logger.ExceptionInvalidId)
 	}
 	session := Session.Copy()
 	defer session.Close()
+	criteria := GetCriteria(service)
 
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
 
 	valueType := reflect.New(reflect.TypeOf(service.Domain))
 	value := valueType
-	error := c.Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(value.Interface())
+	error := c.Find(bson.M{"_id": bson.ObjectIdHex(id), "$and": criteria}).One(value.Interface())
 	return value.Elem().Interface(), error
+}
+
+func GetCriteria(service Service) []interface{} {
+	var criteria []interface{}
+	if service.TokenScope.User != nil {
+		criteria = []interface{}{
+			bson.M{"ui": service.TokenScope.User.Login},
+			bson.M{"rights": bson.M{"$bitsAnySet": core.DEFAULT_RIGHTS.Positions}},
+		}
+	}
+	fmt.Println("_---", criteria)
+	return criteria
 }
 
 func (service Service) CreateDatabase() (error) {

@@ -24,11 +24,17 @@ func Handler(ww Response, rr *Request, resource Resource) error {
 		return nil
 	}
 
-	resp,err := proxy.Authenticate(wtoken)
+	if wtoken == "" {
+		ww.Header().Set("Content-Type", "application/json; charset=utf-8")
+		ww.WriteHeader(http.StatusForbidden)
+		return errors.New("Informe um wtoken")
+	}
+
+	resp,err := proxy.Authorize(wtoken)
 	if resp.StatusCode == http.StatusForbidden {
 		ww.Header().Set("Content-Type", "application/json; charset=utf-8")
 		ww.WriteHeader(http.StatusForbidden)
-		return errors.New("Forbidden")
+		return errors.New("Not authenticate")
 	}
 	var token domain.Token
 	err = json.NewDecoder(resp.Body).Decode(&token)

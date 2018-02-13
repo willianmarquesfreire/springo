@@ -24,24 +24,29 @@ func ParametroNome(w rest.Response, r *rest.Request) Pessoa {
 	return Pessoa{Nome: a.(string)}
 }
 
-func Authenticate(w rest.Response, r *rest.Request) (*domain.Token) {
+func Authorize(w rest.Response, r *rest.Request) (*domain.Token) {
 	if strings.Contains(r.PathVariables["token"].(string), "bloquea") {
 		w.WriteHeader(http.StatusForbidden)
 		return nil
 	}
-	return domain.Token{
+
+	id := bson.ObjectIdHex("5a83005233213a5720ef69bd")
+	return &domain.Token{
 		Information: bson.NewObjectId().String(),
-		Group:domain.Group{
+		Group:&domain.Group{
 			Software:&domain.Software{
 				Name:r.PathVariables["app"].(string),
 				Url:r.PathVariables["app"].(string),
 			},
 			Name:"app",
-		}.WithDefaultRights(),
-		User:domain.User{
+			GenericDomain: domain.GenericDomain{
+				ID: &id,
+			},
+		},
+		User:&domain.User{
 			Login:"willianmarquesfreire@gmail.com",
-		}.WithDefaultRights(),
-	}.WithDefaultRights()
+		},
+	}
 }
 
 func ParametroRegex(w rest.Response, r *rest.Request) string {

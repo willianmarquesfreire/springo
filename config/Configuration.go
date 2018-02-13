@@ -73,9 +73,9 @@ func createMockConfigTest() Configuration {
 		ApiPath:     "/application-api",
 		Identifier:  "br.com.app",
 		MgoDial:     "localhost",
-		Addr:        ":8088",
+		Addr:        ":8086",
 		BaseUrl:     "/api/",
-		SecurityUrl: "http://localhost:8088/application-api",
+		SecurityUrl: "http://localhost:8086/application-api",
 	}
 }
 
