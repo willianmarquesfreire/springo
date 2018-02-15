@@ -31,22 +31,34 @@ func Authorize(w rest.Response, r *rest.Request) (*domain.Token) {
 	}
 
 	id := bson.ObjectIdHex("5a83005233213a5720ef69bd")
-	return &domain.Token{
+	id2 := bson.ObjectIdHex("5a85c98233213a3b116dd8d1")
+	u1 := &domain.Token{
 		Information: bson.NewObjectId().String(),
-		Group:&domain.Group{
-			Software:&domain.Software{
-				Name:r.PathVariables["app"].(string),
-				Url:r.PathVariables["app"].(string),
-			},
-			Name:"app",
+		User: &domain.User{
+			Login: "willianmarquesfreire@gmail.com",
 			GenericDomain: domain.GenericDomain{
 				ID: &id,
+				GI: "grupowillian,",
 			},
 		},
-		User:&domain.User{
-			Login:"willianmarquesfreire@gmail.com",
+	}
+
+	u2 := &domain.Token{
+		Information: bson.NewObjectId().String(),
+		User: &domain.User{
+			Login: "teste@gmail.com",
+			GenericDomain: domain.GenericDomain{
+				ID: &id2,
+				GI: "grupoteste,grupowillian,",
+			},
 		},
 	}
+
+	if r.PathVariables["token"].(string) == "willian" {
+		return u1
+	}
+
+	return u2
 }
 
 func ParametroRegex(w rest.Response, r *rest.Request) string {

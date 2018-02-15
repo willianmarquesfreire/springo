@@ -44,6 +44,17 @@ func GetAttrs(obj interface{}) []Attr {
 			}
 			f.Value = s.Field(i)
 			attrs = append(attrs, f)
+		} else if Equal(s.Field(i).Interface(), domain.GenericDomain{}) {
+			for j := 0; j < s.Field(i).NumField(); j++ {
+				field := s.Field(i).Field(j)
+				if field.Interface() != nil && field.Interface() != "" {
+					f := Attr{
+						Field: s.Field(i).Type().Field(j),
+					}
+					f.Value = s.Field(i).Field(j)
+					attrs = append(attrs, f)
+				}
+			}
 		}
 	}
 	return attrs

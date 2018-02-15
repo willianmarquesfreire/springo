@@ -97,38 +97,32 @@ func NewSearch(r *Request) Search {
 	return qo
 }
 
-func (resource RestResource) GetAll(w Response, r *Request) Result {
-	toReturn, _ := resource.Service.FindAll(NewSearch(r))
-	return toReturn
+func (resource RestResource) GetAll(w Response, r *Request) (Result, error) {
+	return resource.Service.FindAll(NewSearch(r))
 }
 
-func (resource RestResource) Post(w Response, r *Request) interface{} {
+func (resource RestResource) Post(w Response, r *Request) (interface{}, error) {
 	value := resource.DecodeBody(r)
-	saved, _ := resource.Service.Insert(value)
-	return saved
+	return resource.Service.Insert(value)
 }
 
 
-func (resource RestResource) Get(w Response, r *Request) interface{} {
-	toReturn, _ := resource.Service.Find(r.PathVariables["id"].(string))
-	return toReturn
+func (resource RestResource) Get(w Response, r *Request) (interface{}, error) {
+	return resource.Service.Find(r.PathVariables["id"].(string))
 }
 
-func (resource RestResource) Put(w Response, r *Request) interface{} {
+func (resource RestResource) Put(w Response, r *Request) (interface{}, error) {
 	value := resource.DecodeBody(r)
-	saved, _ := resource.Service.Update(r.PathVariables["id"].(string), value)
-	return saved
+	return resource.Service.Update(r.PathVariables["id"].(string), value)
 }
 
-func (resource RestResource) Patch(w Response, r *Request) interface{} {
+func (resource RestResource) Patch(w Response, r *Request) (interface{}, error) {
 	value := resource.DecodeBody(r)
-	saved, _ := resource.Service.Set(r.PathVariables["id"].(string), value)
-	return saved
+	return resource.Service.Set(r.PathVariables["id"].(string), value)
 }
 
-func (resource RestResource) Delete(w Response, r *Request) string {
-	toReturn, _ := resource.Service.Drop(r.PathVariables["id"].(string))
-	return toReturn
+func (resource RestResource) Delete(w Response, r *Request) (string, error) {
+	return resource.Service.Drop(r.PathVariables["id"].(string))
 }
 
 func (resource RestResource) DecodeBody(r *Request) domain.GenericInterface {

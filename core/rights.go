@@ -21,6 +21,15 @@ var OTHER_DELETE = Rights{Value: 1, Positions: []int8{0}, Pos: 8} //000000001
 var DEFAULT_RIGHTS = Rights{
 	Value: 504, Positions: []int8{8, 7, 6, 5, 4, 3}, Pos: 6}
 
+var RIGHTS_READ = Rights{
+	Value: 504, Positions: []int8{8, 5, 2}, Pos: 6}
+
+var RIGHTS_UPDATE = Rights{
+	Value: 504, Positions: []int8{7, 4, 1}, Pos: 6}
+
+var RIGHTS_DELETE = Rights{
+	Value: 504, Positions: []int8{6, 3, 0}, Pos: 6}
+
 var OWNER_RIGHTS = Rights{
 	Value: 448, Positions: []int8{8, 7, 6}, Pos: 2}
 

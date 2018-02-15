@@ -11,7 +11,6 @@ type Token struct {
 	Information  string `json:"information"`
 	ExpirateAt   time.Time `json:"expirateAt,omitempty"`
 	User         *User `json:"user,omitempty"`
-	Group     *Group `json:"group,omitempty"`
 }
 
 func (g Token) ChangeId() {

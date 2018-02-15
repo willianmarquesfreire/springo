@@ -11,7 +11,8 @@ import (
 	"springo/config"
 	"springo/logger"
 	"springo/util/mongo"
-	"fmt"
+	"regexp"
+	"strings"
 )
 
 type Result struct {
@@ -41,7 +42,7 @@ func (service Service) FindAll(search Search) (Result, error) {
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
 
 	if service.TokenScope.User != nil {
-		search.M["$and"] = GetCriteria(service)
+		search.M = GetCriteria(service, core.RIGHTS_READ.Positions)
 	}
 
 	my := service.Domain
@@ -74,7 +75,7 @@ func (service Service) Insert(value domain.GenericInterface) (domain.GenericInte
 
 	if service.TokenScope.User != nil {
 		value.ChangeUI(service.TokenScope.User.Login)
-		value.ChangeGI(service.TokenScope.Group.ID.Hex() + ",")
+		value.ChangeGI(service.TokenScope.User.GI)
 	}
 
 	error := c.Insert(&value)
@@ -89,21 +90,26 @@ func (service Service) Update(id string, value domain.GenericInterface) (domain.
 	session := Session.Copy()
 	defer session.Close()
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
-	criteria := GetCriteria(service)
 
-	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id), "$and": criteria}, &value)
+	if service.TokenScope.User != nil {
+		value.ChangeUI(service.TokenScope.User.Login)
+		value.ChangeGI(service.TokenScope.User.GI)
+	}
+
+	criteria := GetCriteria(service, core.RIGHTS_UPDATE.Positions)
+
+	error := c.Update(bson.M{"$and": []bson.M{criteria, bson.M{"_id": bson.ObjectIdHex(id)}}}, &value)
 	return value, error
 }
 
-func (service Service) Set(id string, value domain.GenericInterface) (domain.GenericInterface, error) {
+func (service Service) Set(id string, value domain.GenericInterface) (interface{}, error) {
 	session := Session.Copy()
 	defer session.Close()
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
-	criteria := GetCriteria(service)
-	error := c.Update(bson.M{"_id": bson.ObjectIdHex(id), "$and": criteria}, bson.M{"$set": mongo.GetBsonMSet(value)})
+	criteria := GetCriteria(service, core.RIGHTS_UPDATE.Positions)
+	error := c.Update(bson.M{"$and": []bson.M{criteria, bson.M{"_id": bson.ObjectIdHex(id)}}}, bson.M{"$set": mongo.GetBsonMSet(value)})
 	updated, error := service.Find(id)
-	value = updated.(domain.GenericInterface)
-	return value, error
+	return updated, error
 }
 
 func (service Service) Collection() (*mgo.Collection) {
@@ -119,25 +125,54 @@ func (service Service) Find(id string) (interface{}, error) {
 	}
 	session := Session.Copy()
 	defer session.Close()
-	criteria := GetCriteria(service)
+	criteria := GetCriteria(service, core.RIGHTS_READ.Positions)
 
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
 
 	valueType := reflect.New(reflect.TypeOf(service.Domain))
 	value := valueType
-	error := c.Find(bson.M{"_id": bson.ObjectIdHex(id), "$and": criteria}).One(value.Interface())
+	error := c.Find(bson.M{"$and": []bson.M{criteria, bson.M{"_id": bson.ObjectIdHex(id)}}}).One(value.Interface())
 	return value.Elem().Interface(), error
 }
 
-func GetCriteria(service Service) []interface{} {
-	var criteria []interface{}
+func (service Service) Drop(id string) (string, error) {
+	session := Session.Copy()
+	defer session.Close()
+	c := session.DB(config.MainConfiguration.Database).C(service.Document)
+	criteria := GetCriteria(service, core.RIGHTS_DELETE.Positions)
+
+	error := c.Remove(bson.M{"$and": []bson.M{criteria, bson.M{"_id": bson.ObjectIdHex(id)}}})
+	return id, error
+}
+
+//db.users.find({"$or":[{"ui":"willianmarquesfreire@gmail.com"},{"$and":[{gi:{"$regex":".*grupowillian,.*"}}, {"rights":{"$bitsAnySet":[8,5,2]}}]}]}).pretty()
+func GetCriteria(service Service, rights []int8) bson.M {
+	var criteria bson.M
 	if service.TokenScope.User != nil {
-		criteria = []interface{}{
-			bson.M{"ui": service.TokenScope.User.Login},
-			bson.M{"rights": bson.M{"$bitsAnySet": core.DEFAULT_RIGHTS.Positions}},
+		gi := regexp.MustCompile(",").ReplaceAllString(service.TokenScope.User.GI, "|")
+		gi = ".*" + strings.TrimSuffix(gi, "|") + ".*"
+		criteria = bson.M{
+			"$or": []bson.M{
+				bson.M{
+					"$and": []bson.M{
+						bson.M{"ui": service.TokenScope.User.Login},
+						bson.M{"rights": bson.M{"$bitsAnySet": []int8{rights[0]}}},
+					},
+				},
+				bson.M{
+					"$and": []bson.M{
+						bson.M{"gi": bson.M{"$regex": gi}},
+						bson.M{"rights": bson.M{"$bitsAnySet": []int8{rights[1]}}},
+					},
+				},
+				bson.M{
+					"$and": []bson.M{
+						bson.M{"rights": bson.M{"$bitsAnySet": []int8{rights[2]}}},
+					},
+				},
+			},
 		}
 	}
-	fmt.Println("_---", criteria)
 	return criteria
 }
 
@@ -159,15 +194,6 @@ func (service Service) DropDatabase() (error) {
 	session := Session.Copy()
 	defer session.Close()
 	return session.DB(config.MainConfiguration.Database).DropDatabase()
-}
-
-func (service Service) Drop(id string) (string, error) {
-	session := Session.Copy()
-	defer session.Close()
-	c := session.DB(config.MainConfiguration.Database).C(service.Document)
-
-	error := c.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
-	return id, error
 }
 
 func (service Service) EnsureIndex() {
