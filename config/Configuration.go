@@ -52,7 +52,7 @@ func loadConfig(filename string) (Configuration, error) {
 	return c, nil
 }
 
-func createMockConfigTest() Configuration {
+func CreateMockConfigTest() Configuration {
 	return Configuration{
 		Clusters: []Cluster{
 			Cluster{
@@ -79,14 +79,14 @@ func createMockConfigTest() Configuration {
 	}
 }
 
-func StartConfigurationTest(config Configuration) {
+func StartConfiguration(config Configuration) {
 	log.Println("Starting configuration to test.")
-	err := saveConfig(config, "config_test.yaml")
+	err := saveConfig(config, "config.yaml")
 	if err != nil {
 		panic(err)
 	}
 
-	c, err := loadConfig("config_test.yaml")
+	c, err := loadConfig("config.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -95,5 +95,5 @@ func StartConfigurationTest(config Configuration) {
 }
 
 func StartConfigurationTestMock() {
-	StartConfigurationTest(createMockConfigTest())
+	StartConfiguration(CreateMockConfigTest())
 }

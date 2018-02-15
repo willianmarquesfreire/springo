@@ -4,12 +4,15 @@ import (
 	"net/http"
 	"springo/rest"
 	"springo/rest/test/resources"
+	"springo/config"
 )
 
 func main() {
 	Start()
 }
+
 func Start() {
+	config.StartConfigurationTestMock()
 	session := rest.StartSession()
 	defer session.Close()
 	rest.CurrentApi.OnNotFound(NotFound)

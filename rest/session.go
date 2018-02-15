@@ -48,7 +48,6 @@ func Handler(ww Response, rr *Request, resource Resource) error {
 }
 
 func StartSession() *mgo.Session{
-	config.StartConfigurationTestMock()
 	CurrentApi = new(Api)
 	CurrentApi.NewMux()
 	CurrentApi.AddHandler(Handler)

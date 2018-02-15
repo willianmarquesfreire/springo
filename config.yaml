@@ -1,0 +1,22 @@
+clusters:
+- name: Dev
+  datacentre: Local
+  nodes:
+  - dev1.company.com
+  - dev2.company.com
+- name: Prod
+  datacentre: Amazon
+  nodes:
+  - prd1.company.com
+  - prd2.company.com
+  - prd3.company.com
+min_replicas: 1
+max_replicas: 5
+debug: true
+database: application_test
+api_path: /application-api
+identifier: br.com.app
+mgo_dial: localhost
+addr: :8086
+base_url: /api/
+security_url: http://localhost:8086/application-api
