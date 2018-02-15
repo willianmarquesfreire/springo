@@ -22,8 +22,6 @@ func Start() {
 	rest.CurrentApi.Register(rest.Resource{Path: "public/authorize/{app}/{token}", Method: "GET", Function: resources.Authorize})
 	rest.CurrentApi.RegisterAll(resources.UserResource.GetResources())
 	rest.CurrentApi.RegisterAll(resources.TokenResource.GetResources())
-	rest.CurrentApi.RegisterAll(resources.SoftwareResource.GetResources())
-	rest.CurrentApi.RegisterAll(resources.GroupResource.GetResources())
 	rest.CurrentApi.ListenAndServe()
 }
 

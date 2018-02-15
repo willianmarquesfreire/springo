@@ -87,6 +87,11 @@ func (service Service) Insert(value domain.GenericInterface) (domain.GenericInte
 }
 
 func (service Service) Update(id string, value domain.GenericInterface) (domain.GenericInterface, error) {
+
+	if !bson.IsObjectIdHex(id) {
+		return nil, errors.New("Invalid Id!")
+	}
+
 	session := Session.Copy()
 	defer session.Close()
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
@@ -103,6 +108,11 @@ func (service Service) Update(id string, value domain.GenericInterface) (domain.
 }
 
 func (service Service) Set(id string, value domain.GenericInterface) (interface{}, error) {
+
+	if !bson.IsObjectIdHex(id) {
+		return nil, errors.New("Invalid Id!")
+	}
+
 	session := Session.Copy()
 	defer session.Close()
 	c := session.DB(config.MainConfiguration.Database).C(service.Document)
