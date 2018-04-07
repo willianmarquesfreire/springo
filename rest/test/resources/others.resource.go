@@ -9,6 +9,9 @@ import (
 	"strings"
 	"net/http"
 	"gopkg.in/mgo.v2/bson"
+	"fmt"
+	"encoding/json"
+	"reflect"
 )
 
 type Pessoa struct {
@@ -102,4 +105,20 @@ func TestandoZip(w rest.Response, r *rest.Request) []byte {
 	w.Header().Set("Content-Type", "application/zip")
 	a, _ := ioutil.ReadAll(file)
 	return a
+}
+
+func Register(w rest.Response, r *rest.Request) (*domain.Token) {
+	valueType := reflect.New(reflect.TypeOf(domain.User{}))
+	decoder := json.NewDecoder(r.Body)
+	var value domain.GenericInterface = valueType.Interface().(domain.GenericInterface)
+	decoder.Decode(value)
+	fmt.Println(value, reflect.TypeOf(value))
+
+	uService := UserService
+	uResult := uService.SimpleInsert(value).(*domain.User)
+
+	tService := TokenService
+	tResult := tService.SimpleInsert(&domain.Token{User:uResult}).(*domain.Token)
+
+	return tResult
 }

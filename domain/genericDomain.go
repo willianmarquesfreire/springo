@@ -3,6 +3,9 @@ package domain
 import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"springo/core"
+	"fmt"
+	"reflect"
 )
 
 type GenericInterface interface {
@@ -26,22 +29,28 @@ type GenericDomain struct {
 
 func (g *GenericDomain) ChangeId() {
 	var id bson.ObjectId = bson.NewObjectId()
+	fmt.Println(reflect.TypeOf(g))
 	g.ID = &id
 }
 
-func (g *GenericDomain) ChangeUI(ui string) {
+func (g GenericDomain) ChangeUI(ui string) {
 	g.UI = ui
 }
 
-func (g *GenericDomain) ChangeGI(gi string) {
+func (g GenericDomain) ChangeGI(gi string) {
 	g.GI = gi
 }
 
-func (g *GenericDomain) ChangeRights(rights int32) {
+func (g GenericDomain) ChangeRights(rights int32) {
 	g.Rights = rights
 }
 
-func (g *GenericDomain) GetRights() int32 {
+func (g GenericDomain) WithDefaultRights() *GenericDomain {
+	g.Rights = core.DEFAULT_RIGHTS.Value
+	return &g
+}
+
+func (g GenericDomain) GetRights() int32 {
 	return g.Rights
 }
 
@@ -49,6 +58,6 @@ func (g *GenericDomain) ChangeCreated() {
 	g.Created = time.Now()
 }
 
-func (g *GenericDomain) Value() GenericDomain {
-	return *g
+func (g GenericDomain) Value() GenericDomain {
+	return g
 }

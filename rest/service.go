@@ -86,6 +86,12 @@ func (service Service) Insert(value domain.GenericInterface) (domain.GenericInte
 
 }
 
+func (service Service) SimpleInsert(value domain.GenericInterface) (domain.GenericInterface) {
+	result, _ := service.Insert(value)
+	return result
+
+}
+
 func (service Service) Update(id string, value domain.GenericInterface) (domain.GenericInterface, error) {
 
 	if !bson.IsObjectIdHex(id) {

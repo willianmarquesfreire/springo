@@ -132,3 +132,11 @@ func (resource RestResource) DecodeBody(r *Request) domain.GenericInterface {
 	decoder.Decode(value)
 	return value
 }
+
+func DecodeBody(obj interface{}, r * Request) interface{} {
+	valueType := reflect.New(reflect.TypeOf(obj))
+	decoder := json.NewDecoder(r.Body)
+	var value domain.GenericInterface = valueType.Interface().(domain.GenericInterface)
+	decoder.Decode(value)
+	return value
+}

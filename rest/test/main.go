@@ -22,6 +22,7 @@ func Start() {
 	rest.CurrentApi.Register(rest.Resource{Path: "testando-png", Method: "GET", Function: resources.TestandoPng})
 	rest.CurrentApi.Register(rest.Resource{Path: "testando-pdf", Method: "GET", Function: resources.TestandoPdf})
 	rest.CurrentApi.Register(rest.Resource{Path: "testando-zip", Method: "GET", Function: resources.TestandoZip})
+	rest.CurrentApi.Register(rest.Resource{Path: "public/register", Method: "POST", Function: resources.Register})
 	rest.CurrentApi.Register(rest.Resource{Path: "public/authorize/{app}/{token}", Method: "GET", Function: resources.Authorize})
 	rest.CurrentApi.RegisterAll(resources.UserResource.GetResources())
 	rest.CurrentApi.RegisterAll(resources.TokenResource.GetResources())
