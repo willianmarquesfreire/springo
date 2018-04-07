@@ -9,6 +9,7 @@ import (
 	"springo/logger"
 	"springo/config"
 	"springo/util/reflection"
+	"springo/domain"
 )
 
 /**
@@ -50,7 +51,19 @@ func (api Api) ListenAndServe() Api {
 		response := Response{}
 		response.ResponseWriter = ww
 
-		respBody := mountResponseJSON(response, request, api)
+		valueType := reflect.New(reflect.TypeOf(domain.User{}))
+		decoder := json.NewDecoder(rr.Body)
+		var value domain.GenericInterface = valueType.Interface().(domain.GenericInterface)
+		decoder.Decode(value)
+
+		erro := reflection.Validate(value)
+		var respBody interface{} = nil
+		if erro != nil {
+			respBody = ResponseError{Error: erro.Error(),}
+		} else {
+			respBody = mountResponseJSON(response, request, api)
+		}
+
 		if respBody != nil {
 			typeof := reflect.TypeOf(respBody)
 			if ww.Header().Get("Content-Type") == "" {
@@ -88,6 +101,7 @@ func (api Api) ListenAndServe() Api {
 func mountResponseJSON(response Response, request *Request, api Api) interface{} {
 
 	args := mountArgsListAccordingParamsToCallMethod(response, request)
+
 	resource := getResourceOnApiOfRequest(api, request)
 
 	if api.Handlers != nil && len(api.Handlers) > 0 {
@@ -113,7 +127,7 @@ func mountRespBodyAccordingValues(values []reflect.Value) interface{} {
 	var respBody interface{}
 
 	if values != nil && len(values) > 0 {
-		if len(values) == 2 && !(values[1].IsNil()){
+		if len(values) == 2 && !(values[1].IsNil()) {
 			respBody = values[1].Interface()
 		} else {
 			respBody = values[0].Interface()
@@ -261,6 +275,8 @@ type Resource struct {
 type Request struct {
 	*http.Request
 	PathVariables map[string]interface{}
+	BodyObject    domain.GenericInterface
+	Error         error
 }
 
 /**

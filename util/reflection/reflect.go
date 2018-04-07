@@ -4,6 +4,7 @@ import (
 	"strings"
 	"reflect"
 	"springo/domain"
+	"errors"
 )
 
 type Attr struct {
@@ -31,13 +32,31 @@ func Equal(obj interface{}, obj2 interface{}) bool {
 	return reflect.TypeOf(obj) == reflect.TypeOf(obj2)
 }
 
+func Validate(obj interface{}) error {
+	var erros string = ""
+	s := GetElem(obj)
+
+	typeof := s.Type()
+
+	for i := 0; i < typeof.NumField(); i++ {
+		if strings.Contains(typeof.Field(i).Tag.Get("validate"), "required") && (s.Field(i).Interface() == nil || s.Field(i).Interface() == "" || s.Field(i).Interface() == 0) {
+			erros = erros + typeof.Field(i).Name + " has empty, "
+		}
+	}
+
+	if erros == "" {
+		return nil
+	}
+	return errors.New(erros)
+}
+
 func GetAttrs(obj interface{}) []Attr {
 	var attrs []Attr = make([]Attr, 0)
 	s := GetElem(obj)
 
 	typeof := s.Type()
 
-	for i := 0; i < s.NumField(); i++ {
+	for i := 0; i < typeof.NumField(); i++ {
 		if !Equal(s.Field(i).Interface(), domain.GenericDomain{}) && s.Field(i).Interface() != nil && s.Field(i).Interface() != "" {
 			f := Attr{
 				Field: typeof.Field(i),
